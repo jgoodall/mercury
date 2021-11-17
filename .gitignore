@@ -1,0 +1,6 @@
+bin
+certs
+_*
+mage_output_file.go
+testdata/4SICS-GeekLounge-151020.pcap
+output.pcap

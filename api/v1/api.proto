@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "code.ornl.gov/situ/mercury/api/v1";
+
+
+// For gRPC gateway: https://github.com/grpc-ecosystem/grpc-gateway
+// See `download_deps.sh` to download from source.
+import "google/api/annotations.proto";
+
+// Complex types: https://github.com/golang/protobuf/tree/master/ptypes
+// See `download_deps.sh` to download from source.
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+enum QueryType {
+  ip = 0;
+  port = 1;
+  mac = 2;
+  protocol = 3;
+}
+
+message QueryReq {
+  google.protobuf.Timestamp startTime = 1;
+  google.protobuf.Duration duration = 2;
+  string label = 3;
+  QueryType queryType = 4;
+  string query = 5;
+  bool binaryOutput = 6; // If true, will send binary; if false, will send QueryResp 
+  bool showAll = 7; // If true, will show all of the packet details in Text field
+  bool encode = 8; // If true, will encode response text as Base64
+}
+
+// QueryResp will send either text or binary, depending on the QueryReq.
+message QueryResp {
+  google.protobuf.Timestamp timestamp = 1;
+  int64 length = 2;
+  string srcMAC = 3;
+  string dstMAC = 4;
+  string srcIP = 5;
+  string dstIP = 6;
+  uint32 srcPort = 7;
+  string srcPortStr = 8;
+  uint32 dstPort = 9;
+  string dstPortStr = 10;
+  string proto = 11;
+  bool ipv6 = 12;
+  string text = 14;
+  bytes data = 15;
+}
+
+// QueryBinaryResp will send a pcap binary stream.
+message QueryBinaryResp {
+  bytes binary = 2;
+}
+
+service PacketService {
+  rpc QueryStream(QueryReq) returns (stream QueryResp) {
+    option (google.api.http) = {
+        get: "/v1/q"
+    };
+  }
+  rpc QueryBinaryStream(QueryReq) returns (stream QueryBinaryResp) { }
+}
